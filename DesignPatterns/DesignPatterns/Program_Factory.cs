@@ -17,7 +17,7 @@ namespace MyApp_Factory
 
     internal class Program
     {
-        static void Main(string[] args)
+        static void Main_1(string[] args)
         {
             IDbConnection conexao = new ConnectionFactory().GetConnection();
 

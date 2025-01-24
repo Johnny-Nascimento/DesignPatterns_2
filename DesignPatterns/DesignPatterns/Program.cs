@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
 
-namespace MyApp_Memento
+namespace MyApp_Interpreter
 {
     internal class Program
     {

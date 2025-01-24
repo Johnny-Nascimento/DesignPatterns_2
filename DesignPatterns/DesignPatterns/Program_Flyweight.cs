@@ -76,7 +76,7 @@ namespace MyApp_Flyweight
 
     internal class Program_Flyweight
     {
-        static void Main(string[] args)
+        static void Main_2(string[] args)
         {
             NotasMusicais notasMusicais = new NotasMusicais();
 
