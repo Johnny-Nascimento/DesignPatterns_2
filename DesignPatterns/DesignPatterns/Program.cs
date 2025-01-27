@@ -1,131 +1,225 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Linq.Expressions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace MyApp_Interpreter
+namespace MyApp_Factory
 {
-    public interface IExpressao
+    internal class Program_Visitor
     {
-        public int Avalia();
-    }
-
-    public class Numero : IExpressao
-    {
-        private int Num;
-        public Numero(int numero) 
+        public interface IExpressao
         {
-            Num = numero;
+            public int Avalia();
+            public void Aceita(ImpressoraVisitor impressora);
         }
 
-        public int Avalia()
+        public class Numero : IExpressao
         {
-            return Num;
-        }
-    }
+            public int Valor { get; private set; }
 
-    public class Soma : IExpressao
-    {
-        private IExpressao Esquerda;
-        private IExpressao Direita;
+            public Numero(int numero)
+            {
+                Valor = numero;
+            }
 
-        public Soma(IExpressao esquerda, IExpressao direita)
-        {
-            Esquerda = esquerda;
-            Direita = direita;
-        }
+            public int Avalia()
+            {
+                return Valor;
+            }
 
-        public int Avalia()
-        {
-            return Esquerda.Avalia() + Direita.Avalia();
-        }
-    }
-
-    public class Subtracao : IExpressao
-    {
-        private IExpressao Esquerda;
-        private IExpressao Direita;
-
-        public Subtracao(IExpressao esquerda, IExpressao direita)
-        {
-            Esquerda = esquerda;
-            Direita = direita;
+            public void Aceita(ImpressoraVisitor impressora)
+            {
+                impressora.ImprimeNumero(this);
+            }
         }
 
-        public int Avalia()
+        public class Soma : IExpressao
         {
-            return Esquerda.Avalia() - Direita.Avalia();
-        }
-    }
+            public IExpressao Esquerda{get; private set;}
+            public IExpressao Direita { get; private set; }
 
-    public class Multiplicacao : IExpressao
-    {
-        private IExpressao Esquerda;
-        private IExpressao Direita;
+            public Soma(IExpressao esquerda, IExpressao direita)
+            {
+                Esquerda = esquerda;
+                Direita = direita;
+            }
 
-        public Multiplicacao(IExpressao esquerda, IExpressao direita)
-        {
-            Esquerda = esquerda;
-            Direita = direita;
-        }
+            public int Avalia()
+            {
+                return Esquerda.Avalia() + Direita.Avalia();
+            }
 
-        public int Avalia()
-        {
-            return Esquerda.Avalia() * Direita.Avalia();
-        }
-    }
-
-    public class Divisao : IExpressao
-    {
-        private IExpressao Esquerda;
-        private IExpressao Direita;
-
-        public Divisao(IExpressao esquerda, IExpressao direita)
-        {
-            Esquerda = esquerda;
-            Direita = direita;
+            public void Aceita(ImpressoraVisitor impressora)
+            {
+                impressora.ImprimeSoma(this);
+            }
         }
 
-        public int Avalia()
+        public class Subtracao : IExpressao
         {
-            int direita = Direita.Avalia();
+            public IExpressao Esquerda { get; private set; }
+            public IExpressao Direita { get; private set; }
 
-            if (direita == 0)
-                throw new Exception("Valor da direita não pode ser zero");
+            public Subtracao(IExpressao esquerda, IExpressao direita)
+            {
+                Esquerda = esquerda;
+                Direita = direita;
+            }
 
-            return Esquerda.Avalia() / Direita.Avalia();
+            public int Avalia()
+            {
+                return Esquerda.Avalia() - Direita.Avalia();
+            }
+
+            public void Aceita(ImpressoraVisitor impressora)
+            {
+                impressora.ImprimeSubtracao(this);
+            }
         }
-    }
 
-    public class RaizQuadrada : IExpressao
-    {
-        private IExpressao Numero;
-
-        public RaizQuadrada(IExpressao numero)
+        public class Multiplicacao : IExpressao
         {
-            Numero = numero;
+            public IExpressao Esquerda { get; private set; }
+            public IExpressao Direita { get; private set; }
+
+            public Multiplicacao(IExpressao esquerda, IExpressao direita)
+            {
+                Esquerda = esquerda;
+                Direita = direita;
+            }
+
+            public int Avalia()
+            {
+                return Esquerda.Avalia() * Direita.Avalia();
+            }
+
+            public void Aceita(ImpressoraVisitor impressora)
+            {
+                impressora.ImprimeMultiplicacao(this);
+            }
         }
 
-        public int Avalia()
+        public class Divisao : IExpressao
         {
-            return (int)Math.Sqrt(Numero.Avalia());
+            public IExpressao Esquerda { get; private set; }
+            public IExpressao Direita { get; private set; }
+
+            public Divisao(IExpressao esquerda, IExpressao direita)
+            {
+                Esquerda = esquerda;
+                Direita = direita;
+            }
+
+            public int Avalia()
+            {
+                int direita = Direita.Avalia();
+
+                if (direita == 0)
+                    throw new Exception("Valor da direita não pode ser zero");
+
+                return Esquerda.Avalia() / Direita.Avalia();
+            }
+
+            public void Aceita(ImpressoraVisitor impressora)
+            {
+                impressora.ImprimeDivisao(this);
+            }
         }
-    }
 
-    internal class Program
-    {
-        static void Main(string[] args)
+        public class RaizQuadrada : IExpressao
         {
-            IExpressao esquerda = new Soma(new Numero(10), new Numero(15));
-            IExpressao direita = new Subtracao(new Numero(20), new Numero(15));
+            public IExpressao Numero { get; private set; }
 
-            IExpressao resultado = new RaizQuadrada(new Numero(25));
+            public RaizQuadrada(IExpressao numero)
+            {
+                Numero = numero;
+            }
 
-            Console.WriteLine(resultado.Avalia());
+            public int Avalia()
+            {
+                return (int)Math.Sqrt(Numero.Avalia());
+            }
 
-            // Expression soma = Expression.Add(Expression.Constant(100), Expression.Constant(50));
-            // Func<int> funcao = Expression.Lambda<Func<int>>(soma).Compile();
-            // Console.WriteLine(funcao());
+            public void Aceita(ImpressoraVisitor impressora)
+            {
+                impressora.ImprimeRaizQuadrada(this);
+            }
+        }
+
+        public interface IVisitor
+        {
+            public void ImprimeSoma(Soma soma);
+            public void ImprimeSubtracao(Subtracao subtracao);
+            public void ImprimeDivisao(Divisao divisao);
+            public void ImprimeMultiplicacao(Multiplicacao multiplicacao);
+            public void ImprimeRaizQuadrada(RaizQuadrada raizQuadrada);
+            public void ImprimeNumero(Numero numero);
+        }
+
+        public class ImpressoraVisitor : IVisitor
+        {
+            public void ImprimeSoma(Soma soma)
+            {
+                Console.Write("(");
+                soma.Esquerda.Aceita(this);
+                Console.Write("+");
+                soma.Direita.Aceita(this);
+                Console.Write(")");
+            }
+
+            public void ImprimeSubtracao(Subtracao subtracao)
+            {
+                Console.Write("(");
+                subtracao.Esquerda.Aceita(this);
+                Console.Write("-");
+                subtracao.Direita.Aceita(this);
+                Console.Write(")");
+            }
+
+            public void ImprimeDivisao(Divisao divisao)
+            {
+                Console.Write("(");
+                divisao.Esquerda.Aceita(this);
+                Console.Write("/");
+                divisao.Direita.Aceita(this);
+                Console.Write(")");
+            }
+
+            public void ImprimeMultiplicacao(Multiplicacao multiplicacao)
+            {
+                Console.Write("(");
+                multiplicacao.Esquerda.Aceita(this);
+                Console.Write("*");
+                multiplicacao.Direita.Aceita(this);
+                Console.Write(")");
+            }
+
+            public void ImprimeRaizQuadrada(RaizQuadrada raizQuadrada)
+            {
+                Console.Write("√");
+                raizQuadrada.Numero.Aceita(this);
+            }
+
+
+            public void ImprimeNumero(Numero numero)
+            {
+                Console.Write(numero.Valor);
+            }
+        }
+
+        internal class Program_Interpreter
+        {
+            static void Main(string[] args)
+            {
+                IExpressao esquerda = new Soma(new Numero(10), new Numero(15));
+                IExpressao direita = new Subtracao(new Numero(40), new Numero(15));
+
+                IExpressao soma = new RaizQuadrada(direita);
+
+                Console.WriteLine(soma.Avalia());
+
+                ImpressoraVisitor impressora = new ImpressoraVisitor();
+
+                soma.Aceita(impressora);
+            }
         }
     }
 }
