@@ -1,86 +1,117 @@
 ﻿
-using static MyApp_Bridges.Program;
+using System.Windows.Input;
+using static MyApp_Command.Program;
 
-namespace MyApp_Bridges
+namespace MyApp_Command
 {
     internal class Program
     {
-        public interface IEnviador
+        public enum Status
         {
-            void Envia(IMensagem mensagem);
+            Novo,
+            Processado,
+            Pago,
+            ItemSeparado,
+            Entregue
         }
 
-        public class EnviadorEmail : IEnviador
+        public class Pedido
         {
-            public void Envia(IMensagem mensagem)
+            public string Cliente { get; private set; }
+            public double Valor { get; private set; }
+            public DateTime DataFinalizacao { get; private set; }
+            public Status  Status { get; private set; }
+
+            public Pedido(string cliente, double valor)
             {
-                Console.WriteLine("Enviando mensagem por email...");
-                Console.WriteLine(mensagem.Formata());   
-            }
-        }
+                Cliente = cliente;
+                Valor = valor;
 
-        public class EnviadorSMS : IEnviador
-        {
-            public void Envia(IMensagem mensagem)
-            {
-                Console.WriteLine("Enviando mensagem por SMS...");
-                Console.WriteLine(mensagem.Formata());
-            }
-        }
-
-        public interface IMensagem
-        {
-            void Envia(IEnviador enviador);
-            string Formata();
-        }
-
-        public class MensagemPorEmail : IMensagem
-        {
-            private string nome;
-
-            public MensagemPorEmail(string nome)
-            {
-                this.nome = nome;
+                Status = Status.Novo;
             }
 
-            public void Envia(IEnviador enviador)
+            public void Paga()
             {
-                enviador.Envia(this);
+                Status = Status.Pago;
             }
 
-            public string Formata()
+            public void Finaliza()
             {
-                return string.Format("Mensagem para o usuário {0}", nome);
+                Status = Status.Entregue;
+                DataFinalizacao = DateTime.Now;
             }
         }
 
-        public class MensagemPorSMS : IMensagem
+        public interface IComando
         {
-            private string nome;
+            void Executa();
+        }
 
-            public MensagemPorSMS(string nome)
+        public class PagaPedido : IComando
+        {
+            public Pedido pedido;
+
+            public PagaPedido(Pedido pedido)
             {
-                this.nome = nome;
+                this.pedido = pedido;
             }
 
-            public void Envia(IEnviador enviador)
+            public void Executa()
             {
-                enviador.Envia(this);
+                this.pedido.Paga();
+            }
+        }
+
+        public class FinalizaPedido : IComando
+        {
+            private Pedido pedido;
+
+            public FinalizaPedido(Pedido pedido)
+            {
+                this.pedido = pedido;
             }
 
-            public string Formata()
+            public void Executa()
             {
-                return string.Format("Mensagem para o usuário {0}", nome);
+                this.pedido.Finaliza();
+            }
+        }
+
+        public class FilaDeTrabalho
+        {
+            private IList<IComando> Comandos = new List<IComando>();
+
+            public void Adiciona(IComando comando)
+            {
+                this.Comandos.Add(comando);
+            }
+
+            public void Processa()
+            {
+                foreach (var comando in Comandos)
+                {
+                    comando.Executa();
+                }
             }
         }
 
         static void Main(string[] args)
         {
-            MensagemPorEmail mensagemEmail = new MensagemPorEmail("Jorge");
-            mensagemEmail.Envia(new EnviadorEmail());
+            Pedido pedido = new Pedido("Jorge", 10.00);
 
-            MensagemPorSMS mensagemSMS = new MensagemPorSMS("Mario");
-            mensagemSMS.Envia(new EnviadorSMS());
+            FilaDeTrabalho fila = new FilaDeTrabalho();
+
+            fila.Adiciona(new PagaPedido(pedido));
+
+            Console.WriteLine(pedido.Status);
+            Console.WriteLine(pedido.DataFinalizacao);
+
+            fila.Adiciona(new FinalizaPedido(pedido));
+
+            fila.Processa();
+
+            Console.WriteLine(pedido.Status);
+            Console.WriteLine(pedido.DataFinalizacao);
         }
     }
 }
