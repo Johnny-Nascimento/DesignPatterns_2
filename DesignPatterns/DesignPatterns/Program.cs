@@ -1,225 +1,86 @@
-﻿using Microsoft.Data.SqlClient;
-using System.Data;
+﻿
+using static MyApp_Bridges.Program;
 
-namespace MyApp_Factory
+namespace MyApp_Bridges
 {
-    internal class Program_Visitor
+    internal class Program
     {
-        public interface IExpressao
+        public interface IEnviador
         {
-            public int Avalia();
-            public void Aceita(ImpressoraVisitor impressora);
+            void Envia(IMensagem mensagem);
         }
 
-        public class Numero : IExpressao
+        public class EnviadorEmail : IEnviador
         {
-            public int Valor { get; private set; }
-
-            public Numero(int numero)
+            public void Envia(IMensagem mensagem)
             {
-                Valor = numero;
-            }
-
-            public int Avalia()
-            {
-                return Valor;
-            }
-
-            public void Aceita(ImpressoraVisitor impressora)
-            {
-                impressora.ImprimeNumero(this);
+                Console.WriteLine("Enviando mensagem por email...");
+                Console.WriteLine(mensagem.Formata());   
             }
         }
 
-        public class Soma : IExpressao
+        public class EnviadorSMS : IEnviador
         {
-            public IExpressao Esquerda{get; private set;}
-            public IExpressao Direita { get; private set; }
-
-            public Soma(IExpressao esquerda, IExpressao direita)
+            public void Envia(IMensagem mensagem)
             {
-                Esquerda = esquerda;
-                Direita = direita;
-            }
-
-            public int Avalia()
-            {
-                return Esquerda.Avalia() + Direita.Avalia();
-            }
-
-            public void Aceita(ImpressoraVisitor impressora)
-            {
-                impressora.ImprimeSoma(this);
+                Console.WriteLine("Enviando mensagem por SMS...");
+                Console.WriteLine(mensagem.Formata());
             }
         }
 
-        public class Subtracao : IExpressao
+        public interface IMensagem
         {
-            public IExpressao Esquerda { get; private set; }
-            public IExpressao Direita { get; private set; }
+            void Envia(IEnviador enviador);
+            string Formata();
+        }
 
-            public Subtracao(IExpressao esquerda, IExpressao direita)
+        public class MensagemPorEmail : IMensagem
+        {
+            private string nome;
+
+            public MensagemPorEmail(string nome)
             {
-                Esquerda = esquerda;
-                Direita = direita;
+                this.nome = nome;
             }
 
-            public int Avalia()
+            public void Envia(IEnviador enviador)
             {
-                return Esquerda.Avalia() - Direita.Avalia();
+                enviador.Envia(this);
             }
 
-            public void Aceita(ImpressoraVisitor impressora)
+            public string Formata()
             {
-                impressora.ImprimeSubtracao(this);
+                return string.Format("Mensagem para o usuário {0}", nome);
             }
         }
 
-        public class Multiplicacao : IExpressao
+        public class MensagemPorSMS : IMensagem
         {
-            public IExpressao Esquerda { get; private set; }
-            public IExpressao Direita { get; private set; }
+            private string nome;
 
-            public Multiplicacao(IExpressao esquerda, IExpressao direita)
+            public MensagemPorSMS(string nome)
             {
-                Esquerda = esquerda;
-                Direita = direita;
+                this.nome = nome;
             }
 
-            public int Avalia()
+            public void Envia(IEnviador enviador)
             {
-                return Esquerda.Avalia() * Direita.Avalia();
+                enviador.Envia(this);
             }
 
-            public void Aceita(ImpressoraVisitor impressora)
+            public string Formata()
             {
-                impressora.ImprimeMultiplicacao(this);
+                return string.Format("Mensagem para o usuário {0}", nome);
             }
         }
 
-        public class Divisao : IExpressao
+        static void Main(string[] args)
         {
-            public IExpressao Esquerda { get; private set; }
-            public IExpressao Direita { get; private set; }
+            MensagemPorEmail mensagemEmail = new MensagemPorEmail("Jorge");
+            mensagemEmail.Envia(new EnviadorEmail());
 
-            public Divisao(IExpressao esquerda, IExpressao direita)
-            {
-                Esquerda = esquerda;
-                Direita = direita;
-            }
-
-            public int Avalia()
-            {
-                int direita = Direita.Avalia();
-
-                if (direita == 0)
-                    throw new Exception("Valor da direita não pode ser zero");
-
-                return Esquerda.Avalia() / Direita.Avalia();
-            }
-
-            public void Aceita(ImpressoraVisitor impressora)
-            {
-                impressora.ImprimeDivisao(this);
-            }
-        }
-
-        public class RaizQuadrada : IExpressao
-        {
-            public IExpressao Numero { get; private set; }
-
-            public RaizQuadrada(IExpressao numero)
-            {
-                Numero = numero;
-            }
-
-            public int Avalia()
-            {
-                return (int)Math.Sqrt(Numero.Avalia());
-            }
-
-            public void Aceita(ImpressoraVisitor impressora)
-            {
-                impressora.ImprimeRaizQuadrada(this);
-            }
-        }
-
-        public interface IVisitor
-        {
-            public void ImprimeSoma(Soma soma);
-            public void ImprimeSubtracao(Subtracao subtracao);
-            public void ImprimeDivisao(Divisao divisao);
-            public void ImprimeMultiplicacao(Multiplicacao multiplicacao);
-            public void ImprimeRaizQuadrada(RaizQuadrada raizQuadrada);
-            public void ImprimeNumero(Numero numero);
-        }
-
-        public class ImpressoraVisitor : IVisitor
-        {
-            public void ImprimeSoma(Soma soma)
-            {
-                Console.Write("(");
-                soma.Esquerda.Aceita(this);
-                Console.Write("+");
-                soma.Direita.Aceita(this);
-                Console.Write(")");
-            }
-
-            public void ImprimeSubtracao(Subtracao subtracao)
-            {
-                Console.Write("(");
-                subtracao.Esquerda.Aceita(this);
-                Console.Write("-");
-                subtracao.Direita.Aceita(this);
-                Console.Write(")");
-            }
-
-            public void ImprimeDivisao(Divisao divisao)
-            {
-                Console.Write("(");
-                divisao.Esquerda.Aceita(this);
-                Console.Write("/");
-                divisao.Direita.Aceita(this);
-                Console.Write(")");
-            }
-
-            public void ImprimeMultiplicacao(Multiplicacao multiplicacao)
-            {
-                Console.Write("(");
-                multiplicacao.Esquerda.Aceita(this);
-                Console.Write("*");
-                multiplicacao.Direita.Aceita(this);
-                Console.Write(")");
-            }
-
-            public void ImprimeRaizQuadrada(RaizQuadrada raizQuadrada)
-            {
-                Console.Write("√");
-                raizQuadrada.Numero.Aceita(this);
-            }
-
-
-            public void ImprimeNumero(Numero numero)
-            {
-                Console.Write(numero.Valor);
-            }
-        }
-
-        internal class Program_Interpreter
-        {
-            static void Main(string[] args)
-            {
-                IExpressao esquerda = new Soma(new Numero(10), new Numero(15));
-                IExpressao direita = new Subtracao(new Numero(40), new Numero(15));
-
-                IExpressao soma = new RaizQuadrada(direita);
-
-                Console.WriteLine(soma.Avalia());
-
-                ImpressoraVisitor impressora = new ImpressoraVisitor();
-
-                soma.Aceita(impressora);
-            }
+            MensagemPorSMS mensagemSMS = new MensagemPorSMS("Mario");
+            mensagemSMS.Envia(new EnviadorSMS());
         }
     }
 }
