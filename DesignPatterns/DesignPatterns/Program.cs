@@ -1,117 +1,37 @@
-﻿
-using System.Windows.Input;
-using static MyApp_Command.Program;
+﻿using System.Xml.Serialization;
 
-namespace MyApp_Command
+namespace MyApp_Factory
 {
-    internal class Program
+    public class Cliente
     {
-        public enum Status
+        public string Nome { get; set; } = string.Empty;
+        public string Endereco { get; set; } = string.Empty;
+        public DateTime DataNascimento { get; set; }
+    }
+
+    public class GerXML
+    {
+        public string GeraXML(Object obj)
         {
-            Novo,
-            Processado,
-            Pago,
-            ItemSeparado,
-            Entregue
+            XmlSerializer xmlSerializer = new XmlSerializer(obj.GetType());
+            StringWriter sw = new StringWriter();
+            xmlSerializer.Serialize(sw, obj);
+
+            return sw.ToString();
         }
+    }
 
-        public class Pedido
-        {
-            public string Cliente { get; private set; }
-            public double Valor { get; private set; }
-            public DateTime DataFinalizacao { get; private set; }
-            public Status  Status { get; private set; }
-
-            public Pedido(string cliente, double valor)
-            {
-                Cliente = cliente;
-                Valor = valor;
-
-                Status = Status.Novo;
-            }
-
-            public void Paga()
-            {
-                Status = Status.Pago;
-            }
-
-            public void Finaliza()
-            {
-                Status = Status.Entregue;
-                DataFinalizacao = DateTime.Now;
-            }
-        }
-
-        public interface IComando
-        {
-            void Executa();
-        }
-
-        public class PagaPedido : IComando
-        {
-            public Pedido pedido;
-
-            public PagaPedido(Pedido pedido)
-            {
-                this.pedido = pedido;
-            }
-
-            public void Executa()
-            {
-                this.pedido.Paga();
-            }
-        }
-
-        public class FinalizaPedido : IComando
-        {
-            private Pedido pedido;
-
-            public FinalizaPedido(Pedido pedido)
-            {
-                this.pedido = pedido;
-            }
-
-            public void Executa()
-            {
-                this.pedido.Finaliza();
-            }
-        }
-
-        public class FilaDeTrabalho
-        {
-            private IList<IComando> Comandos = new List<IComando>();
-
-            public void Adiciona(IComando comando)
-            {
-                this.Comandos.Add(comando);
-            }
-
-            public void Processa()
-            {
-                foreach (var comando in Comandos)
-                {
-                    comando.Executa();
-                }
-            }
-        }
-
+    internal class Program_Adapter
+    {
         static void Main(string[] args)
         {
-            Pedido pedido = new Pedido("Jorge", 10.00);
+            Cliente cliente = new Cliente();
+            cliente.Nome = "Jorge";
+            cliente.Endereco = "São Paulo";
+            cliente.DataNascimento = new DateTime(1998, 02, 27);
 
-            FilaDeTrabalho fila = new FilaDeTrabalho();
-
-            fila.Adiciona(new PagaPedido(pedido));
-
-            Console.WriteLine(pedido.Status);
-            Console.WriteLine(pedido.DataFinalizacao);
-
-            fila.Adiciona(new FinalizaPedido(pedido));
-
-            fila.Processa();
-
-            Console.WriteLine(pedido.Status);
-            Console.WriteLine(pedido.DataFinalizacao);
+            GerXML clienteXML = new GerXML();
+            Console.WriteLine(clienteXML.GeraXML(cliente));
         }
     }
 }
