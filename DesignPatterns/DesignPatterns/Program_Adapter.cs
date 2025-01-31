@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace MyApp_Factory
+namespace MyApp_Adapter
 {
     public class Cliente
     {
@@ -23,7 +23,7 @@ namespace MyApp_Factory
 
     internal class Program_Adapter
     {
-        static void Main(string[] args)
+        static void Main_8(string[] args)
         {
             Cliente cliente = new Cliente();
             cliente.Nome = "Jorge";
